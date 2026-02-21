@@ -1,7 +1,5 @@
 package domain
 
-import "time"
-
 type OrderItem struct {
 	ProductCode string  `json:"product_code"`
 	UnitPrice   float32 `json:"unit_price"`
@@ -13,7 +11,6 @@ type Order struct {
 	CustomerID int64       `json:"customer_id"`
 	Status     string      `json:"status"`
 	OrderItems []OrderItem `json:"order_items"`
-	CreatedAt  int64       `json:"created_at"`
 }
 
 func NewOrder(customerId int64, orderItems []OrderItem) Order {
@@ -21,6 +18,5 @@ func NewOrder(customerId int64, orderItems []OrderItem) Order {
 		CustomerID: customerId,
 		Status:     "PENDING",
 		OrderItems: orderItems,
-		CreatedAt:  time.Now().Unix(),
 	}
 }

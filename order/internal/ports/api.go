@@ -4,4 +4,5 @@ import "github.com/skyespirates/microservices/order/internal/application/core/do
 
 type APIPort interface {
 	PlaceOrder(order domain.Order) (domain.Order, error)
+	GetOrder(orderID uint) (domain.Order, error)
 }

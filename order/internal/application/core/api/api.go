@@ -23,3 +23,12 @@ func (a Application) PlaceOrder(order domain.Order) (domain.Order, error) {
 
 	return order, nil
 }
+
+func (a Application) GetOrder(orderID uint) (domain.Order, error) {
+	order, err := a.db.Get(orderID)
+	if err != nil {
+		return domain.Order{}, err
+	}
+
+	return order, nil
+}

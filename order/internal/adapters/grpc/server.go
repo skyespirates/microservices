@@ -28,6 +28,8 @@ func (a Adapter) Run() {
 		log.Fatalf("failed to listen on port %d, error: %v", a.port, err)
 	}
 
+	log.Println("server running on port 3000")
+
 	grpcServer := grpc.NewServer()
 	order.RegisterOrderServer(grpcServer, a)
 	if config.GetEnv() == "development" {

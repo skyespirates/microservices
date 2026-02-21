@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/skyespirates/microservices/order/internal/application/core/domain"
 	"gorm.io/driver/mysql"
@@ -43,9 +44,9 @@ func NewAdapter(dataSourceUrl string) (*Adapter, error) {
 	return &Adapter{db}, nil
 }
 
-func (a Adapter) Get(id string) (domain.Order, error) {
+func (a Adapter) Get(id uint) (domain.Order, error) {
 	var orderEntity Order
-	res := a.db.First(&orderEntity, id)
+	res := a.db.Preload("OrderItems").First(&orderEntity, id)
 
 	var orderItems []domain.OrderItem
 
@@ -63,7 +64,6 @@ func (a Adapter) Get(id string) (domain.Order, error) {
 		CustomerID: orderEntity.CustomerID,
 		Status:     orderEntity.Status,
 		OrderItems: orderItems,
-		CreatedAt:  orderEntity.CreatedAt.UnixNano(),
 	}
 
 	return order, res.Error
@@ -87,8 +87,10 @@ func (a Adapter) Save(order *domain.Order) error {
 	}
 
 	res := a.db.Create(&orderModel)
-	if res == nil {
-		order.ID = int64(orderModel.ID)
+	log.Printf("Save: %+v", res)
+	if res.Error != nil {
+		log.Printf("Save failed: %v", res.Error)
+		return res.Error
 	}
-	return res.Error
+	return nil
 }

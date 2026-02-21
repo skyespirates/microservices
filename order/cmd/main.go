@@ -22,12 +22,12 @@ func main() {
 
 	portStr := os.Getenv("APPLICATION_PORT")
 	if portStr == "" {
-		log.Fatal("port is missing")
+		log.Fatal("port is missing, please provide port in env")
 	}
 
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
-		log.Fatalf("%d is invalid port", port)
+		log.Fatalf("%d is invalid port, port must be a number", port)
 	}
 
 	application := api.NewApplication(dbAdapter)
