@@ -87,10 +87,10 @@ func (a Adapter) Save(order *domain.Order) error {
 	}
 
 	res := a.db.Create(&orderModel)
-	log.Printf("Save: %+v", res)
 	if res.Error != nil {
 		log.Printf("Save failed: %v", res.Error)
 		return res.Error
 	}
+	order.ID = int64(orderModel.ID)
 	return nil
 }

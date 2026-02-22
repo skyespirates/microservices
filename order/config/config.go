@@ -31,3 +31,12 @@ func GetEnvironmentValue(key string) string {
 
 	return val
 }
+
+func GetPaymentServiceUrl() string {
+	val := os.Getenv("PAYMENT_SERVICE_URL")
+	if val == "" {
+		log.Fatalf("%s environment variable is missing", "PAYMENT_SERVICE_URL")
+	}
+
+	return val
+}

@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"log"
 
 	"github.com/skyespirates/microservices-proto/golang/order"
 	"github.com/skyespirates/microservices/order/internal/application/core/domain"
@@ -22,7 +21,6 @@ func (a Adapter) Create(ctx context.Context, request *order.CreateOrderRequest) 
 
 	newOrder := domain.NewOrder(request.UserId, orderItems)
 	result, err := a.api.PlaceOrder(newOrder)
-	log.Printf("result: %+v", result)
 	if err != nil {
 		return nil, err
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/skyespirates/microservices/order/internal/adapters/db"
 	"github.com/skyespirates/microservices/order/internal/adapters/grpc"
+	"github.com/skyespirates/microservices/order/internal/adapters/payment"
 	"github.com/skyespirates/microservices/order/internal/application/core/api"
 )
 
@@ -30,7 +31,13 @@ func main() {
 		log.Fatalf("%d is invalid port, port must be a number", port)
 	}
 
-	application := api.NewApplication(dbAdapter)
+	paymentAdapter, err := payment.NewAdapter(os.Getenv("PAYMENT_SERVICE_URL"))
+	if err != nil {
+		log.Fatalf("Failed to initialize payment stub. Error: %v", err)
+	}
+
+	application := api.NewApplication(dbAdapter, paymentAdapter)
 	grpcAdapter := grpc.NewAdapter(application, port)
 	grpcAdapter.Run()
+
 }
