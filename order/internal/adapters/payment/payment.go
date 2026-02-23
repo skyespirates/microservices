@@ -2,7 +2,6 @@ package payment
 
 import (
 	"context"
-	"log"
 
 	"github.com/skyespirates/microservices-proto/golang/payment"
 	"github.com/skyespirates/microservices/order/internal/application/core/domain"
@@ -12,6 +11,7 @@ import (
 
 type Adapter struct {
 	payment payment.PaymentClient
+	conn    *grpc.ClientConn
 }
 
 func NewAdapter(paymentServiceUrl string) (*Adapter, error) {
@@ -23,11 +23,10 @@ func NewAdapter(paymentServiceUrl string) (*Adapter, error) {
 	if err != nil {
 		return nil, err
 	}
-	// defer conn.Close()
 
 	client := payment.NewPaymentClient(conn)
 
-	return &Adapter{payment: client}, nil
+	return &Adapter{payment: client, conn: conn}, nil
 
 }
 
@@ -39,8 +38,10 @@ func (a *Adapter) Charge(order *domain.Order) error {
 		TotalPrice: order.TotalPrice(),
 	}
 
-	log.Printf("********** %+v", request)
-
 	_, err := a.payment.Create(context.Background(), &request)
 	return err
+}
+
+func (a *Adapter) Close() {
+	a.conn.Close()
 }

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 
@@ -25,7 +26,8 @@ type OrderItem struct {
 }
 
 type Adapter struct {
-	db *gorm.DB
+	db    *gorm.DB
+	sqlDB *sql.DB
 }
 
 func NewAdapter(dataSourceUrl string) (*Adapter, error) {
@@ -34,14 +36,23 @@ func NewAdapter(dataSourceUrl string) (*Adapter, error) {
 		return nil, fmt.Errorf("db connection error: %v", openErr)
 	}
 
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sql.DB: %w", err)
+	}
+
 	dst := []interface{}{&Order{}, &OrderItem{}}
 
-	err := db.AutoMigrate(dst...)
+	err = db.AutoMigrate(dst...)
 	if err != nil {
 		return nil, fmt.Errorf("db migration error: %v", err)
 	}
 
-	return &Adapter{db}, nil
+	return &Adapter{db, sqlDB}, nil
+}
+
+func (a Adapter) Close() {
+	a.sqlDB.Close()
 }
 
 func (a Adapter) Get(id uint) (domain.Order, error) {

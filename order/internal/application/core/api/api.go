@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log"
 	"strings"
 
 	"github.com/skyespirates/microservices/order/internal/application/core/domain"
@@ -31,7 +30,6 @@ func (a Application) PlaceOrder(order domain.Order) (domain.Order, error) {
 	}
 
 	paymentErr := a.payment.Charge(&order)
-	log.Println("#################", paymentErr)
 	if paymentErr != nil {
 		st := status.Convert(paymentErr)
 		var allErrors []string
@@ -43,7 +41,6 @@ func (a Application) PlaceOrder(order domain.Order) (domain.Order, error) {
 				}
 			}
 		}
-		log.Println("*******", allErrors)
 		fieldErr := &errdetails.BadRequest_FieldViolation{
 			Field:       "payment",
 			Description: strings.Join(allErrors, "\n"),

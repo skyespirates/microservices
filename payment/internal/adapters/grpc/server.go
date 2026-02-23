@@ -28,7 +28,7 @@ func (a Adapter) Run() {
 		log.Fatalf("failed to listen on port %d, error: %v", a.port, err)
 	}
 
-	log.Println("server running on port 3001")
+	log.Println("server running on port", a.port)
 
 	grpcServer := grpc.NewServer()
 	payment.RegisterPaymentServer(grpcServer, a)

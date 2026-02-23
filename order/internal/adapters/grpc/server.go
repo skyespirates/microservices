@@ -22,13 +22,13 @@ func NewAdapter(api ports.APIPort, port int) *Adapter {
 	return &Adapter{api: api, port: port}
 }
 
-func (a Adapter) Run() {
+func (a Adapter) Run() error {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", a.port))
 	if err != nil {
-		log.Fatalf("failed to listen on port %d, error: %v", a.port, err)
+		return fmt.Errorf("failed to listen on port %d, error: %w", a.port, err)
 	}
 
-	log.Println("server running on port 3000")
+	log.Println("gRPC server running on port", a.port)
 
 	grpcServer := grpc.NewServer()
 	order.RegisterOrderServer(grpcServer, a)
@@ -38,6 +38,9 @@ func (a Adapter) Run() {
 
 	err = grpcServer.Serve(lis)
 	if err != nil {
-		log.Fatalf("failed to serve grpc on port %d", a.port)
+		return fmt.Errorf("failed to serve grpc on port %d, error: %w", a.port, err)
 	}
+
+	return nil
+
 }
