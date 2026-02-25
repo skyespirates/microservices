@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	"github.com/skyespirates/microservices/order/internal/adapters/grpc"
 	"github.com/skyespirates/microservices/order/internal/adapters/payment"
 	"github.com/skyespirates/microservices/order/internal/application/core/api"
+	"github.com/skyespirates/microservices/order/internal/application/core/domain"
 )
 
 func main() {
@@ -55,8 +57,32 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("place order from http"))
+	mux.HandleFunc("POST /orders", func(w http.ResponseWriter, r *http.Request) {
+
+		var payload struct {
+			CustomerID int64              `json:"customer_id"`
+			OrderItems []domain.OrderItem `json:"order_items"`
+		}
+
+		err := json.NewDecoder(r.Body).Decode(&payload)
+		if err != nil {
+			log.Println("decoding error:", err.Error())
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+
+		order := domain.NewOrder(payload.CustomerID, payload.OrderItems)
+
+		order, err = application.PlaceOrder(order)
+		if err != nil {
+			log.Println("place order error:", err.Error())
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		res := map[string]any{"order_id": order.ID}
+		json.NewEncoder(w).Encode(res)
+
 	})
 
 	server := http.Server{
