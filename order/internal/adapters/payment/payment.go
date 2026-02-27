@@ -30,7 +30,7 @@ func NewAdapter(paymentServiceUrl string) (*Adapter, error) {
 
 }
 
-func (a *Adapter) Charge(order *domain.Order) error {
+func (a *Adapter) Charge(ctx context.Context, order *domain.Order) error {
 
 	request := payment.CreatePaymentRequest{
 		UserId:     order.CustomerID,
@@ -38,7 +38,7 @@ func (a *Adapter) Charge(order *domain.Order) error {
 		TotalPrice: order.TotalPrice(),
 	}
 
-	_, err := a.payment.Create(context.Background(), &request)
+	_, err := a.payment.Create(ctx, &request)
 	return err
 }
 

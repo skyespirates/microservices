@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"strings"
+	"time"
 
 	"github.com/skyespirates/microservices/order/internal/application/core/domain"
 	"github.com/skyespirates/microservices/order/internal/ports"
@@ -22,16 +24,26 @@ func NewApplication(db ports.DBPort, payment ports.PaymentPort) *Application {
 	}
 }
 
-func (a Application) PlaceOrder(order domain.Order) (domain.Order, error) {
+func (a Application) PlaceOrder(ctx context.Context, order domain.Order) (domain.Order, error) {
 
 	err := a.db.Save(&order)
 	if err != nil {
 		return domain.Order{}, err
 	}
 
-	paymentErr := a.payment.Charge(&order)
+	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)
+	defer cancel()
+
+	paymentErr := a.payment.Charge(ctx, &order)
 	if paymentErr != nil {
+
 		st := status.Convert(paymentErr)
+
+		if st.Code() == codes.DeadlineExceeded {
+			// Timeout case
+			return domain.Order{}, status.Error(codes.DeadlineExceeded, "payment service did not respond within timeout")
+		}
+
 		var allErrors []string
 		for _, detail := range st.Details() {
 			switch t := detail.(type) {

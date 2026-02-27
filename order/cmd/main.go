@@ -73,10 +73,10 @@ func main() {
 
 		order := domain.NewOrder(payload.CustomerID, payload.OrderItems)
 
-		order, err = application.PlaceOrder(order)
+		order, err = application.PlaceOrder(r.Context(), order)
 		if err != nil {
 			log.Println("place order error:", err.Error())
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
