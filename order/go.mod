@@ -3,6 +3,7 @@ module github.com/skyespirates/microservices/order
 go 1.25.4
 
 require (
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
 	github.com/joho/godotenv v1.5.1
 	github.com/skyespirates/microservices-proto/golang/order v1.0.2
 	github.com/skyespirates/microservices-proto/golang/payment v1.0.1
