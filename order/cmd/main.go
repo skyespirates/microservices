@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 	"syscall"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/skyespirates/microservices/order/internal/adapters/db"
@@ -16,6 +19,7 @@ import (
 	"github.com/skyespirates/microservices/order/internal/adapters/payment"
 	"github.com/skyespirates/microservices/order/internal/application/core/api"
 	"github.com/skyespirates/microservices/order/internal/application/core/domain"
+	"golang.org/x/time/rate"
 )
 
 func main() {
@@ -87,7 +91,7 @@ func main() {
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%s", os.Getenv("APPLICATION_PORT")),
-		Handler: mux,
+		Handler: rateLimit(mux),
 	}
 
 	go func() {
@@ -104,5 +108,64 @@ func main() {
 	<-quit
 
 	log.Println("Shutting down servers...")
+
+}
+
+func rateLimit(next http.Handler) http.Handler {
+
+	type client struct {
+		limiter  *rate.Limiter
+		lastSeen time.Time
+	}
+
+	var (
+		mu      sync.Mutex
+		clients = make(map[string]*client)
+	)
+
+	go func() {
+		for {
+
+			time.Sleep(time.Minute)
+
+			mu.Lock()
+			for ip, client := range clients {
+				if time.Since(client.lastSeen) > 3*time.Minute {
+					delete(clients, ip)
+				}
+			}
+			mu.Unlock()
+
+		}
+	}()
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		ip, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			log.Println(err.Error())
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		mu.Lock()
+		_, found := clients[ip]
+		if !found {
+			clients[ip] = &client{limiter: rate.NewLimiter(2, 4)}
+		}
+
+		clients[ip].lastSeen = time.Now()
+
+		if !clients[ip].limiter.Allow() {
+			log.Printf("Blocked: %v\n", r.RemoteAddr)
+			mu.Unlock()
+			http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)
+			return
+		}
+
+		mu.Unlock()
+
+		next.ServeHTTP(w, r)
+	})
 
 }
