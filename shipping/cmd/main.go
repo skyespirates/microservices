@@ -12,6 +12,10 @@ func main() {
 		w.Write([]byte("initialize shipping service"))
 	})
 
+	mux.HandleFunc("POST /shipping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("shipping new order"))
+	})
+
 	server := http.Server{
 		Addr:    ":3003",
 		Handler: mux,
